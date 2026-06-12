@@ -29,6 +29,12 @@ pip install -e .
 python scripts/run_classification.py --config config/classification/banking77_identity.yaml
 ```
 
+Summarize finished experiment folders into our own flat tables:
+
+```bash
+python scripts/summarize_results.py
+```
+
 ## Config Layout
 
 Configs are organized by task family.
@@ -100,5 +106,22 @@ See:
 - `base encoder`: produces raw text embeddings
 - `embedding transform`: identity or `autoencoders` model
 - `task runner`: uses MTEB tasks and evaluation logic
+
+## Results Summary
+
+The summarizer scans `results/` and writes:
+
+- `results/_tables/results_summary.csv`
+- `results/_tables/results_summary.jsonl`
+
+Each row is one `(experiment, task, split, subset)` result with flattened fields
+from:
+
+- MTEB task scores such as `metric_main_score`, `metric_accuracy`, `metric_f1`
+- MTEB model metadata such as `base_model_name`, `base_embed_dim`
+- transform metadata such as `transform_kind`, `transform_output`
+- benchmark config metadata such as `config_transform_model_name`
+- autoencoder fit metadata such as `fit_epochs_completed`, `fit_best_epoch`,
+  `fit_stopped_early`, `fit_best_validation_loss`
 
 This keeps the benchmark project decoupled from the library itself.

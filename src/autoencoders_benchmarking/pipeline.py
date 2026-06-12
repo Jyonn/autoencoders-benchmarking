@@ -8,7 +8,7 @@ from typing import Any
 
 from mteb import MTEB, get_tasks
 
-from .config import ExperimentConfig
+from .config import ExperimentConfig, experiment_config_to_dict
 from .encoders import SentenceTransformerBackend, TransformedMTEBEncoder
 from .transforms import build_transform
 
@@ -23,6 +23,11 @@ class ClassificationBenchmarkRunner:
 
     def run(self) -> list[dict[str, Any]]:
         """Fit the transform if needed, evaluate, and persist a summary."""
+
+        (self.output_dir / "experiment_config.json").write_text(
+            json.dumps(experiment_config_to_dict(self.config), indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
 
         task = get_tasks(tasks=[self.config.task.name])[0]
         backend = SentenceTransformerBackend(self.config.encoder)

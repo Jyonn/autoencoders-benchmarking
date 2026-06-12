@@ -2,9 +2,12 @@
 
 from .config import ExperimentConfig, load_experiment_config
 from .pipeline import ClassificationBenchmarkRunner
+from .summarizer import summarize_experiment_dir, summarize_results
 
 __all__ = [
     "ClassificationBenchmarkRunner",
     "ExperimentConfig",
     "load_experiment_config",
+    "summarize_experiment_dir",
+    "summarize_results",
 ]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -94,3 +94,9 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
         task=TaskConfig(**task_payload),
         transform=TransformConfig(**transform_payload),
     )
+
+
+def experiment_config_to_dict(config: ExperimentConfig) -> dict[str, Any]:
+    """Convert an experiment config dataclass tree into a plain mapping."""
+
+    return asdict(config)
