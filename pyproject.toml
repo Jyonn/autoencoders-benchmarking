@@ -12,6 +12,7 @@ dependencies = [
   "autoencoders>=0.6.8",
   "mteb>=2.15.3",
   "PyYAML>=6.0",
+  "refconfig>=0.1.2",
   "sentence-transformers>=5.0.0",
 ]
 

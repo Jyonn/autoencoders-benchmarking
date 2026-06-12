@@ -1,0 +1,5 @@
+name: identity
+kind: identity
+fit: false
+output_representation: input
+batch_size: ${transform_batch_size:512}$

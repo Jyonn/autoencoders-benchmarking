@@ -30,6 +30,7 @@ class ClassificationBenchmarkRunner:
         )
 
         task = get_tasks(tasks=[self.config.task.name])[0]
+        self._configure_task(task)
         backend = SentenceTransformerBackend(self.config.encoder)
         transform = build_transform(self.config.transform)
 
@@ -38,13 +39,20 @@ class ClassificationBenchmarkRunner:
             dataset = task.dataset
             if dataset is None:
                 raise RuntimeError(f"Task {task.metadata.name} did not load a dataset.")
-            train_split = dataset["train"]
-            if "text" not in train_split.column_names:
+            train_split_name = str(getattr(task, "train_split", "train"))
+            input_column_name = getattr(task, "input_column_name", "text")
+            if not isinstance(input_column_name, str):
+                raise ValueError(
+                    f"Current classification runner expects a single text input column for fit time, "
+                    f"received {input_column_name!r}."
+                )
+            train_split = dataset[train_split_name]
+            if input_column_name not in train_split.column_names:
                 raise ValueError(
                     f"Current classification runner expects a text column in task {task.metadata.name}. "
                     f"Available columns: {train_split.column_names}"
                 )
-            texts = list(train_split["text"])
+            texts = list(train_split[input_column_name])
             if self.config.task.max_fit_samples is not None:
                 texts = texts[: self.config.task.max_fit_samples]
             train_embeddings = backend.encode_texts(texts)
@@ -65,3 +73,12 @@ class ClassificationBenchmarkRunner:
         summary_path = self.output_dir / "summary.json"
         summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         return summary
+
+    def _configure_task(self, task: Any) -> None:
+        for key, value in self.config.task.config.items():
+            if not hasattr(task, key):
+                raise ValueError(
+                    f"Task {task.metadata.name} has no configurable attribute {key!r}. "
+                    "Please check the MTEB task implementation for supported options."
+                )
+            setattr(task, key, value)

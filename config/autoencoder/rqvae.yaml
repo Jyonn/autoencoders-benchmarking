@@ -1,0 +1,43 @@
+name: rqvae-quantized
+kind: autoencoder
+fit: true
+output_representation: quantized_projected
+batch_size: ${transform_batch_size:512}$
+projection_dim: ${projection_dim:128}$
+projection_seed: ${projection_seed:42}$
+
+model:
+  name: rqvae
+  config:
+    latent_dim: ${latent_dim:128}$
+    num_quantizers: ${num_quantizers:4}$
+    codebook_size: ${codebook_size:64}$
+    assignment_strategy: ${assignment_strategy:sinkhorn}$
+    sinkhorn_epsilon: ${sinkhorn_epsilon:0.05,0.05,0.05,0.05}$
+    sinkhorn_iters: ${sinkhorn_iters:50}$
+
+encoder:
+  name: mlp
+  config:
+    hidden_dims: ${encoder_hidden_dims:384,256}$
+    activation: ${activation:relu}$
+    use_bias: ${use_bias:true}$
+
+decoder:
+  name: mlp
+  config:
+    hidden_dims: ${decoder_hidden_dims:256,384}$
+    activation: ${activation:relu}$
+    use_bias: ${use_bias:true}$
+
+trainer:
+  epochs: ${epochs:0}$
+  patience: ${patience:5}$
+  batch_size: ${train_batch_size:256}$
+  learning_rate: ${learning_rate:0.001}$
+  optimizer_name: ${optimizer_name:adamw}$
+  weight_decay: ${weight_decay:0.0}$
+  validation_ratio: ${validation_ratio:0.1}$
+  test_ratio: ${test_ratio:0.1}$
+  device: ${train_device:cpu}$
+  seed: ${seed:42}$

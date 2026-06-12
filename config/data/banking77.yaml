@@ -1,0 +1,21 @@
+name: banking77-v2
+embedding_dim: 384
+
+encoder:
+  model_name: ${base_encoder_model:sentence-transformers/all-MiniLM-L6-v2}$
+  device: ${base_encoder_device:cpu}$
+  batch_size: ${base_encoder_batch_size:128}$
+  normalize_embeddings: ${normalize_embeddings:false}$
+
+task:
+  name: Banking77Classification.v2
+  output_dir: ${results_root:results}$
+  eval_splits: [test]
+  max_fit_samples: ${max_fit_samples:5000}$
+  config:
+    train_split: train
+    input_column_name: text
+    label_column_name: label
+    samples_per_label: ${samples_per_label:8}$
+    n_experiments: ${n_experiments:10}$
+    seed: ${classification_seed:42}$

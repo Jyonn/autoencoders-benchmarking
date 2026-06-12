@@ -172,15 +172,19 @@ def _build_base_row(
         )
 
     if config_payload is not None:
-        encoder_cfg = config_payload.get("encoder", {})
-        task_cfg = config_payload.get("task", {})
+        data_cfg = config_payload.get("data", {})
+        encoder_cfg = data_cfg.get("encoder", {})
+        task_cfg = data_cfg.get("task", {})
         transform_cfg = config_payload.get("transform", {})
+        transform_model_cfg = transform_cfg.get("model", {})
         row.update(
             {
+                "config_data_name": data_cfg.get("name"),
                 "config_encoder_model_name": encoder_cfg.get("model_name"),
                 "config_task_name": task_cfg.get("name"),
+                "config_transform_name": transform_cfg.get("name"),
                 "config_transform_kind": transform_cfg.get("kind"),
-                "config_transform_model_name": transform_cfg.get("model_name"),
+                "config_transform_model_name": transform_model_cfg.get("name"),
                 "config_transform_output": transform_cfg.get("output_representation"),
                 "config_checkpoint_dir": transform_cfg.get("checkpoint_dir"),
             }

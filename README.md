@@ -1,13 +1,13 @@
 # autoencoders-benchmarking
 
-This project evaluates embedding transforms built with `autoencoders` on downstream tasks.
+This project benchmarks `autoencoders`-based embedding transforms on downstream tasks.
 
-The initial scope is:
+The current scope is:
 
-- text classification through MTEB
-- a pluggable base encoder layer
+- MTEB text classification
+- a pluggable base sentence encoder
 - a pluggable embedding transform layer
-- a first `autoencoders`-backed transform that can train on task-train embeddings
+- reusable benchmark configs split into `data` and `transform`
 
 ## Environment
 
@@ -23,13 +23,28 @@ Install this project in editable mode:
 pip install -e .
 ```
 
-## First run
+## First Run
+
+Identity baseline:
 
 ```bash
-python scripts/run_classification.py --config config/classification/banking77_identity.yaml
+python scripts/run_classification.py \
+  --data config/data/banking77.yaml \
+  --transform config/autoencoder/identity.yaml
 ```
 
-Summarize finished experiment folders into our own flat tables:
+AE with CLI overrides:
+
+```bash
+python scripts/run_classification.py \
+  --data config/data/banking77.yaml \
+  --transform config/autoencoder/ae.yaml \
+  --encoder_hidden_dims 256,128,64 \
+  --decoder_hidden_dims 64,128,256,384 \
+  --latent_dim 64
+```
+
+Summarize finished experiment folders into flat tables:
 
 ```bash
 python scripts/summarize_results.py
@@ -37,89 +52,110 @@ python scripts/summarize_results.py
 
 ## Config Layout
 
-Configs are organized by task family.
-
 ```text
 config/
-  classification/
-    banking77_identity.yaml
-    banking77_ae.yaml
-    banking77_vae.yaml
-    banking77_betavae.yaml
-    banking77_pqvae.yaml
-    banking77_rqvae.yaml
-    banking77_rqvae_codes.yaml
-    banking77_semhash.yaml
+  data/
+    banking77.yaml
+  autoencoder/
+    identity.yaml
+    ae.yaml
+    vae.yaml
+    betavae.yaml
+    pqvae.yaml
+    rqvae.yaml
+    rqvae_codes.yaml
+    semhash.yaml
 ```
 
-## Configuring Autoencoders Models
+## Config Style
 
-For `transform.kind: autoencoder`, this project deliberately keeps the
-`autoencoders` configuration surface open.
+The benchmark now follows the same broad style as `autoencoders/examples`:
 
-- `transform.model_name` selects the model family such as `ae`, `vae`, `rqvae`
-- `transform.model_config` is forwarded directly to the model config class
-- `transform.encoder_name` / `transform.encoder_config` configure the encoder backbone
-- `transform.decoder_name` / `transform.decoder_config` configure the decoder backbone
-- `transform.training_config` is forwarded directly to the matching trainer config
+- `--data ...yaml` contains dataset, base encoder, and MTEB task settings
+- `--transform ...yaml` contains transform, model, encoder, decoder, and trainer settings
+- extra CLI flags are treated as `RefConfig` placeholders
 
-That means simple settings like `latent_dim` and `hidden_dims`, as well as
-family-specific settings like `num_quantizers`, `num_codebooks`,
-`assignment_strategy`, `sinkhorn_epsilon`, `sinkhorn_iters`, or `codebook_size`
-can all be expressed directly in YAML.
+Example placeholder:
 
-For quantized models, the benchmark also supports two sequence-to-vector
-adapters:
+```yaml
+encoder:
+  name: mlp
+  config:
+    hidden_dims: ${encoder_hidden_dims:256,128,64}$
+```
+
+Then:
+
+```bash
+python scripts/run_classification.py \
+  --data config/data/banking77.yaml \
+  --transform config/autoencoder/rqvae.yaml \
+  --encoder_hidden_dims 384,192 \
+  --num_quantizers 3
+```
+
+Sequence-valued fields such as `hidden_dims` and `sinkhorn_epsilon` are written
+as comma-separated strings in placeholders and normalized into Python lists at
+load time.
+
+## Data Config
+
+`config/data/*.yaml` contains:
+
+- a benchmark data alias such as `banking77-v2`
+- the upstream sentence encoder config
+- the MTEB task name and output root
+- `task.config`, which is forwarded onto the MTEB task instance
+
+For classification tasks, `task.config` is where settings like these live:
+
+- `train_split`
+- `input_column_name`
+- `label_column_name`
+- `samples_per_label`
+- `n_experiments`
+
+## Transform Config
+
+`config/autoencoder/*.yaml` follows the `autoencoders` examples layout:
+
+- `model.name` / `model.config`
+- `encoder.name` / `encoder.config`
+- `decoder.name` / `decoder.config`
+- `trainer`
+
+Benchmark-specific fields stay at the transform top level:
+
+- `name`
+- `kind`
+- `fit`
+- `output_representation`
+- `batch_size`
+- `projection_dim`
+- `projection_seed`
+
+If `checkpoint_dir` or `trainer.output_dir` is omitted, the runner fills them in
+automatically under:
+
+```text
+results/<data-name>-<transform-name>/
+```
+
+## Quantized Latent Adapters
+
+For quantized models, the benchmark supports two sequence-to-vector adapters:
 
 - `output_representation: quantized_projected`
-  Uses codebook-wise quantized vectors, concatenates them, then projects back to
-  one dense vector.
+  Uses per-slot quantized vectors, concatenates them, then projects back to one
+  dense vector.
 - `output_representation: code_indices_projected`
   Uses discrete code indices, maps them through random slot-specific embedding
   tables, concatenates them, then projects back to one dense vector.
 
-Example:
-
-```yaml
-transform:
-  kind: autoencoder
-  model_name: rqvae
-  output_representation: quantized_projected
-  projection_dim: 128
-  projection_seed: 42
-  model_config:
-    latent_dim: 128
-    num_quantizers: 4
-    codebook_size: 256
-    assignment_strategy: sinkhorn
-    sinkhorn_epsilon: [0.05, 0.05, 0.05, 0.05]
-    sinkhorn_iters: 50
-  encoder_name: mlp
-  encoder_config:
-    hidden_dims: [384, 256]
-    activation: relu
-  decoder_name: mlp
-  decoder_config:
-    hidden_dims: [256, 384]
-    activation: relu
-  training_config:
-    epochs: 0
-    patience: 5
-    batch_size: 256
-    learning_rate: 0.001
-```
-
 See:
 
-- `config/classification/banking77_ae.yaml`
-- `config/classification/banking77_rqvae.yaml`
-- `config/classification/banking77_rqvae_codes.yaml`
-
-## Current design
-
-- `base encoder`: produces raw text embeddings
-- `embedding transform`: identity or `autoencoders` model
-- `task runner`: uses MTEB tasks and evaluation logic
+- `config/autoencoder/rqvae.yaml`
+- `config/autoencoder/rqvae_codes.yaml`
 
 ## Results Summary
 
@@ -128,14 +164,5 @@ The summarizer scans `results/` and writes:
 - `results/_tables/results_summary.csv`
 - `results/_tables/results_summary.jsonl`
 
-Each row is one `(experiment, task, split, subset)` result with flattened fields
-from:
-
-- MTEB task scores such as `metric_main_score`, `metric_accuracy`, `metric_f1`
-- MTEB model metadata such as `base_model_name`, `base_embed_dim`
-- transform metadata such as `transform_kind`, `transform_output`
-- benchmark config metadata such as `config_transform_model_name`
-- autoencoder fit metadata such as `fit_epochs_completed`, `fit_best_epoch`,
-  `fit_stopped_early`, `fit_best_validation_loss`
-
-This keeps the benchmark project decoupled from the library itself.
+Each row contains flattened MTEB metrics, base encoder metadata, transform
+metadata, resolved benchmark config fields, and autoencoder fit metadata.
