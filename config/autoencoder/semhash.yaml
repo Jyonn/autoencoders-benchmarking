@@ -7,7 +7,7 @@ batch_size: ${transform_batch_size:512}$
 model:
   name: semhash
   config:
-    latent_dim: ${latent_dim:128}$
+    latent_dim: ${latent_dim:32}$
     binarization: ${binarization:ste}$
     binarization_weight: ${binarization_weight:0.1}$
     balance_weight: ${balance_weight:0.01}$
@@ -16,14 +16,7 @@ model:
 encoder:
   name: mlp
   config:
-    hidden_dims: ${encoder_hidden_dims:384,256}$
-    activation: ${activation:relu}$
-    use_bias: ${use_bias:true}$
-
-decoder:
-  name: mlp
-  config:
-    hidden_dims: ${decoder_hidden_dims:256,384}$
+    hidden_dims: ${encoder_hidden_dims:256,128,64}$
     activation: ${activation:relu}$
     use_bias: ${use_bias:true}$
 

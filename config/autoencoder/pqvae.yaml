@@ -7,7 +7,7 @@ batch_size: ${transform_batch_size:512}$
 model:
   name: pqvae
   config:
-    latent_dim: ${latent_dim:128}$
+    latent_dim: ${latent_dim:32}$
     num_codebooks: ${num_codebooks:4}$
     codebook_size: ${codebook_size:256}$
     assignment_strategy: ${assignment_strategy:sinkhorn}$
@@ -17,14 +17,7 @@ model:
 encoder:
   name: mlp
   config:
-    hidden_dims: ${encoder_hidden_dims:384,256}$
-    activation: ${activation:relu}$
-    use_bias: ${use_bias:true}$
-
-decoder:
-  name: mlp
-  config:
-    hidden_dims: ${decoder_hidden_dims:256,384}$
+    hidden_dims: ${encoder_hidden_dims:256,128,64}$
     activation: ${activation:relu}$
     use_bias: ${use_bias:true}$
 

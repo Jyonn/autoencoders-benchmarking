@@ -40,8 +40,7 @@ python scripts/run_classification.py \
   --data config/data/banking77.yaml \
   --transform config/autoencoder/ae.yaml \
   --encoder_hidden_dims 256,128,64 \
-  --decoder_hidden_dims 64,128,256,384 \
-  --latent_dim 64
+  --latent_dim 32
 ```
 
 Summarize finished experiment folders into flat tables:
@@ -72,7 +71,7 @@ config/
 The benchmark now follows the same broad style as `autoencoders/examples`:
 
 - `--data ...yaml` contains dataset, base encoder, and MTEB task settings
-- `--transform ...yaml` contains transform, model, encoder, decoder, and trainer settings
+- `--transform ...yaml` contains transform, model, encoder, and trainer settings
 - extra CLI flags are treated as `RefConfig` placeholders
 
 Example placeholder:
@@ -90,7 +89,8 @@ Then:
 python scripts/run_classification.py \
   --data config/data/banking77.yaml \
   --transform config/autoencoder/rqvae.yaml \
-  --encoder_hidden_dims 384,192 \
+  --encoder_hidden_dims 256,128,64 \
+  --latent_dim 32 \
   --num_quantizers 3
 ```
 
@@ -121,8 +121,10 @@ For classification tasks, `task.config` is where settings like these live:
 
 - `model.name` / `model.config`
 - `encoder.name` / `encoder.config`
-- `decoder.name` / `decoder.config`
 - `trainer`
+
+These benchmark configs now omit `decoder` by default. The underlying
+benchmark runner synthesizes a mirrored decoder config from the encoder config.
 
 Benchmark-specific fields stay at the transform top level:
 

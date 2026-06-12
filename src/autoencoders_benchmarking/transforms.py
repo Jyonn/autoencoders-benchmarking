@@ -285,15 +285,58 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
         # Forward model/backbone kwargs unchanged so benchmark configs can
         # expose the full autoencoders surface, including model-family specific
         # options such as residual quantizer counts or sinkhorn settings.
+        decoder_name, decoder_config = self._resolve_decoder_components()
         return load_model(
             self.config.model_name,
             sample_spec=self.sample_spec,
             encoder=self.config.encoder_name,
             encoder_config=self.config.encoder_config,
-            decoder=self.config.decoder_name,
-            decoder_config=self.config.decoder_config,
+            decoder=decoder_name,
+            decoder_config=decoder_config,
             **self.config.model_config,
         )
+
+    def _resolve_decoder_components(self) -> tuple[str | None, dict[str, Any] | None]:
+        if self.config.decoder_name is not None:
+            return self.config.decoder_name, self.config.decoder_config
+        inferred = self._infer_decoder_config()
+        if inferred is None:
+            return None, None
+        return self.config.encoder_name, inferred
+
+    def _infer_decoder_config(self) -> dict[str, Any] | None:
+        """Infer a mirrored decoder config from the encoder config."""
+
+        if self.config.decoder_name is not None:
+            return None
+        if self.config.encoder_name is None:
+            return None
+        if self.config.encoder_name != "mlp":
+            raise ValueError(
+                "Benchmark decoder inference currently supports only encoder.name='mlp'. "
+                "Provide an explicit decoder for other module families."
+            )
+        if self.sample_spec is None or not isinstance(self.sample_spec, TensorSpec):
+            raise RuntimeError("sample_spec must be a TensorSpec before inferring a mirrored decoder.")
+
+        encoder_config = dict(self.config.encoder_config)
+        raw_hidden_dims = encoder_config.get("hidden_dims")
+        if not isinstance(raw_hidden_dims, list) or not raw_hidden_dims:
+            raise ValueError("Mirrored decoder inference requires encoder.config.hidden_dims to be a non-empty list.")
+
+        sample_dim = self.sample_spec.shape[-1]
+        if sample_dim is None:
+            raise ValueError("Mirrored decoder inference requires a concrete final sample dimension.")
+
+        hidden_dims = [int(dim) for dim in raw_hidden_dims]
+        mirrored_hidden_dims = list(reversed(hidden_dims))
+        if self.config.model_name not in _VAE_MODEL_NAMES:
+            mirrored_hidden_dims = mirrored_hidden_dims[1:]
+        decoder_hidden_dims = [*mirrored_hidden_dims, int(sample_dim)]
+
+        decoder_config = dict(encoder_config)
+        decoder_config["hidden_dims"] = decoder_hidden_dims
+        return decoder_config
 
     def _select_representation(self, export: Any) -> torch.Tensor:
         simple_mapping = {

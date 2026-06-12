@@ -7,19 +7,12 @@ batch_size: ${transform_batch_size:512}$
 model:
   name: ae
   config:
-    latent_dim: ${latent_dim:128}$
+    latent_dim: ${latent_dim:32}$
 
 encoder:
   name: mlp
   config:
-    hidden_dims: ${encoder_hidden_dims:256}$
-    activation: ${activation:relu}$
-    use_bias: ${use_bias:true}$
-
-decoder:
-  name: mlp
-  config:
-    hidden_dims: ${decoder_hidden_dims:64,128,256,384}$
+    hidden_dims: ${encoder_hidden_dims:256,128,64}$
     activation: ${activation:relu}$
     use_bias: ${use_bias:true}$
 
