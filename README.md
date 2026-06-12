@@ -20,14 +20,13 @@ source /Users/jyonn/Projects/venv/research/bin/activate
 Install this project in editable mode:
 
 ```bash
-pip install -e /Users/jyonn/Projects/Research/autoencoders-benchmarking
+pip install -e .
 ```
 
 ## First run
 
 ```bash
-python /Users/jyonn/Projects/Research/autoencoders-benchmarking/scripts/run_classification.py \
-  --config /Users/jyonn/Projects/Research/autoencoders-benchmarking/configs/banking77_identity.yaml
+python scripts/run_classification.py --config configs/banking77_identity.yaml
 ```
 
 ## Current design

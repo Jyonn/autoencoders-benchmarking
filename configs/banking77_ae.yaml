@@ -8,7 +8,7 @@ encoder:
 
 task:
   name: Banking77Classification.v2
-  output_dir: /Users/jyonn/Projects/Research/autoencoders-benchmarking/results
+  output_dir: results
   eval_splits: ["test"]
   max_fit_samples: 5000
 
@@ -17,7 +17,7 @@ transform:
   fit: true
   output_representation: latents
   batch_size: 512
-  checkpoint_dir: /Users/jyonn/Projects/Research/autoencoders-benchmarking/results/banking77-v2-ae-latents/checkpoint
+  checkpoint_dir: results/banking77-v2-ae-latents/checkpoint
   model_name: ae
   model_config:
     latent_dim: 128
@@ -32,7 +32,7 @@ transform:
     activation: relu
     use_bias: true
   training_config:
-    output_dir: /Users/jyonn/Projects/Research/autoencoders-benchmarking/results/banking77-v2-ae-latents/train
+    output_dir: results/banking77-v2-ae-latents/train
     epochs: 5
     batch_size: 256
     learning_rate: 0.001

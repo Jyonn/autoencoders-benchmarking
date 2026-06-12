@@ -8,7 +8,7 @@ encoder:
 
 task:
   name: Banking77Classification.v2
-  output_dir: /Users/jyonn/Projects/Research/autoencoders-benchmarking/results
+  output_dir: results
   eval_splits: ["test"]
 
 transform:
