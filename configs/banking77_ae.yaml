@@ -33,7 +33,8 @@ transform:
     use_bias: true
   training_config:
     output_dir: results/banking77-v2-ae-latents/train
-    epochs: 5
+    epochs: 0
+    patience: 5
     batch_size: 256
     learning_rate: 0.001
     optimizer_name: adamw
