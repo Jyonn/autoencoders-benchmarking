@@ -1,0 +1,16 @@
+experiment_name: banking77-v2-identity
+
+encoder:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  device: cpu
+  batch_size: 128
+  normalize_embeddings: false
+
+task:
+  name: Banking77Classification.v2
+  output_dir: /Users/jyonn/Projects/Research/autoencoders-benchmarking/results
+  eval_splits: ["test"]
+
+transform:
+  kind: identity
+  fit: false
