@@ -184,6 +184,9 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
     def _build_model(self) -> nn.Module:
         if self.sample_spec is None:
             raise RuntimeError("sample_spec must be set before building the autoencoder model.")
+        # Forward model/backbone kwargs unchanged so benchmark configs can
+        # expose the full autoencoders surface, including model-family specific
+        # options such as residual quantizer counts or sinkhorn settings.
         return load_model(
             self.config.model_name,
             sample_spec=self.sample_spec,

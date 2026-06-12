@@ -32,7 +32,19 @@ class TaskConfig:
 
 @dataclass
 class TransformConfig:
-    """Configuration for the embedding transform."""
+    """Configuration for the embedding transform.
+
+    For ``kind="autoencoder"``, the four config mappings below are forwarded
+    directly into the installed ``autoencoders`` library:
+
+    - ``model_config`` -> model family config such as ``latent_dim``,
+      ``num_quantizers``, ``codebook_size``, ``assignment_strategy``,
+      ``sinkhorn_epsilon``
+    - ``encoder_config`` -> encoder backbone config such as ``hidden_dims``
+    - ``decoder_config`` -> decoder backbone config
+    - ``training_config`` -> trainer config such as ``epochs``, ``patience``,
+      ``optimizer_name``
+    """
 
     kind: str = "identity"
     output_representation: str = "latents"
