@@ -23,10 +23,10 @@ transform:
   model_name: rqvae
   model_config:
     latent_dim: 128
-    num_quantizers: 4
-    codebook_size: 256
+    num_quantizers: 3
+    codebook_size: 32
     assignment_strategy: sinkhorn
-    sinkhorn_epsilon: [0.05, 0.05, 0.05, 0.05]
+    sinkhorn_epsilon: [0, 0, 0.05]
     sinkhorn_iters: 50
   encoder_name: mlp
   encoder_config:
