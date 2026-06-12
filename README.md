@@ -26,7 +26,23 @@ pip install -e .
 ## First run
 
 ```bash
-python scripts/run_classification.py --config configs/banking77_identity.yaml
+python scripts/run_classification.py --config config/classification/banking77_identity.yaml
+```
+
+## Config Layout
+
+Configs are organized by task family.
+
+```text
+config/
+  classification/
+    banking77_identity.yaml
+    banking77_ae.yaml
+    banking77_vae.yaml
+    banking77_betavae.yaml
+    banking77_pqvae.yaml
+    banking77_rqvae.yaml
+    banking77_semhash.yaml
 ```
 
 ## Configuring Autoencoders Models
@@ -76,8 +92,8 @@ transform:
 
 See:
 
-- `configs/banking77_ae.yaml`
-- `configs/banking77_rqvae.yaml`
+- `config/classification/banking77_ae.yaml`
+- `config/classification/banking77_rqvae.yaml`
 
 ## Current design
 
