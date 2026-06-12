@@ -15,6 +15,7 @@ from torch import nn
 from autoencoders import load_model
 from autoencoders.data.base import TensorSpec, create_dataloaders, split_dataset
 from autoencoders.data.embeddings import EmbeddingMatrix, EmbeddingTensorDataset
+from autoencoders.training.display import style
 from autoencoders.training import (
     AETrainer,
     AdversarialAutoencoderTrainer,
@@ -192,6 +193,7 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
             if self.checkpoint_dir is not None
             else None
         )
+        self.trace_printed = False
 
     def fit(self, embeddings: np.ndarray) -> None:
         """Fit the autoencoder on a matrix of train embeddings."""
@@ -209,6 +211,7 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
         tensor = torch.from_numpy(matrix)
         self.sample_spec = TensorSpec(shape=(int(matrix.shape[1]),))
         self.model = self._build_model()
+        self._print_pipeline_trace()
 
         dataset = EmbeddingTensorDataset(
             EmbeddingMatrix(
@@ -260,6 +263,7 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
             self.device = resolve_device(self.config.training_config.get("device", "auto"))
             self.model.to(self.device)
             self.model.eval()
+            self._print_pipeline_trace(source="checkpoint")
 
         device = self.device or resolve_device(self.config.training_config.get("device", "auto"))
         self.device = device
@@ -435,6 +439,55 @@ class AutoencoderEmbeddingTransform(EmbeddingTransform):
                 return int(sample_dim)
         raise ValueError("Unable to infer projection_dim. Please set transform.projection_dim explicitly.")
 
+    def _print_pipeline_trace(self, *, source: str = "config") -> None:
+        if self.trace_printed:
+            return
+        if self.model is None or not hasattr(self.model, "get_pipeline_trace"):
+            return
+
+        pipeline = self.model.get_pipeline_trace()
+        self.trace_printed = True
+
+        print()
+        print(
+            style(
+                f" AE Shape Trace ({self.config.model_name}, {source}) ",
+                fg="white",
+                bg="magenta",
+                bold=True,
+            )
+        )
+        if not pipeline:
+            print(style("  <empty>", fg="yellow", dim=True))
+            print(style(" End Trace ", fg="black", bg="yellow", bold=True))
+            print()
+            return
+
+        first_step = pipeline[0]
+        print(
+            f"{style(first_step.name, fg='cyan', bold=True)} "
+            f"{style(':', fg='magenta', dim=True)} "
+            f"{_format_spec(first_step.output_spec)}"
+        )
+
+        for step in pipeline[1:]:
+            header = (
+                f"{style(step.name, fg='cyan', bold=True)} "
+                f"{style('->', fg='magenta', dim=True)} "
+                f"{_format_spec(step.output_spec)}"
+            )
+            print(header)
+            for child in step.children or []:
+                child_line = (
+                    f"  {style('↳', fg='yellow', bold=True)} "
+                    f"{style(child.name, fg='blue')} "
+                    f"{style('->', fg='magenta', dim=True)} "
+                    f"{_format_spec(child.output_spec)}"
+                )
+                print(child_line)
+        print(style(" End Trace ", fg="black", bg="yellow", bold=True))
+        print()
+
 
 def build_transform(config: TransformConfig) -> EmbeddingTransform:
     """Construct a transform from config."""
@@ -490,3 +543,7 @@ def _xavier_uniform(
 ) -> torch.Tensor:
     bound = math.sqrt(6.0 / float(fan_in + fan_out))
     return torch.empty(shape, dtype=torch.float32).uniform_(-bound, bound, generator=generator)
+
+
+def _format_spec(spec: Any) -> str:
+    return style(str(spec), fg="green")
