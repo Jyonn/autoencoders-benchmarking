@@ -44,11 +44,19 @@ class TransformConfig:
     - ``decoder_config`` -> decoder backbone config
     - ``training_config`` -> trainer config such as ``epochs``, ``patience``,
       ``optimizer_name``
+
+    Quantized-model specific post-processing can additionally use:
+
+    - ``projection_dim`` -> target dimension after quantized sequence fusion
+    - ``projection_seed`` -> deterministic seed for random index embeddings and
+      fusion projections
     """
 
     kind: str = "identity"
     output_representation: str = "latents"
     batch_size: int = 512
+    projection_dim: int | None = None
+    projection_seed: int = 42
     checkpoint_dir: str | None = None
     fit: bool = False
     model_name: str | None = None

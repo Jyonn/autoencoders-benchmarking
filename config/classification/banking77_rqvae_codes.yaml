@@ -1,4 +1,4 @@
-experiment_name: banking77-v2-rqvae-quantized
+experiment_name: banking77-v2-rqvae-codes
 
 encoder:
   model_name: sentence-transformers/all-MiniLM-L6-v2
@@ -15,11 +15,11 @@ task:
 transform:
   kind: autoencoder
   fit: true
-  output_representation: quantized_projected
+  output_representation: code_indices_projected
   batch_size: 512
   projection_dim: 128
   projection_seed: 42
-  checkpoint_dir: results/banking77-v2-rqvae-quantized/checkpoint
+  checkpoint_dir: results/banking77-v2-rqvae-codes/checkpoint
   model_name: rqvae
   model_config:
     latent_dim: 128
@@ -39,7 +39,7 @@ transform:
     activation: relu
     use_bias: true
   training_config:
-    output_dir: results/banking77-v2-rqvae-quantized/train
+    output_dir: results/banking77-v2-rqvae-codes/train
     epochs: 0
     patience: 5
     batch_size: 256

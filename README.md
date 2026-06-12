@@ -48,6 +48,7 @@ config/
     banking77_betavae.yaml
     banking77_pqvae.yaml
     banking77_rqvae.yaml
+    banking77_rqvae_codes.yaml
     banking77_semhash.yaml
 ```
 
@@ -67,13 +68,25 @@ family-specific settings like `num_quantizers`, `num_codebooks`,
 `assignment_strategy`, `sinkhorn_epsilon`, `sinkhorn_iters`, or `codebook_size`
 can all be expressed directly in YAML.
 
+For quantized models, the benchmark also supports two sequence-to-vector
+adapters:
+
+- `output_representation: quantized_projected`
+  Uses codebook-wise quantized vectors, concatenates them, then projects back to
+  one dense vector.
+- `output_representation: code_indices_projected`
+  Uses discrete code indices, maps them through random slot-specific embedding
+  tables, concatenates them, then projects back to one dense vector.
+
 Example:
 
 ```yaml
 transform:
   kind: autoencoder
   model_name: rqvae
-  output_representation: latents
+  output_representation: quantized_projected
+  projection_dim: 128
+  projection_seed: 42
   model_config:
     latent_dim: 128
     num_quantizers: 4
@@ -100,6 +113,7 @@ See:
 
 - `config/classification/banking77_ae.yaml`
 - `config/classification/banking77_rqvae.yaml`
+- `config/classification/banking77_rqvae_codes.yaml`
 
 ## Current design
 
